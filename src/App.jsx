@@ -60,88 +60,133 @@ const App = () => {
     }
     // console.log(evento)
   }
-  const borrarCita = () => {
-  const [citaEliminada] = citas.filter((cita) =>cita.id !== id)
-  escribirDB(citaEliminada)
-  modificarCitas(leerDB())
-  }
-  if(citaEliminada){
-    modificarId(citaEliminada.id)
-    modificarNombreCompleto(citaEliminada.nombreCompleto)
-    modificarFecha(citaEliminada.fecha)
-    modificarHorario(citaEliminada.horario)
-    modificarTelefono(citaEliminada.telefono)
-  }
-  const editarCita = (id) => {
-    const [citaFiltrada] = citas.filter((cita)=>{
-      if(cita.id === id){
-        return cita
-      }
+
+  const borrarCita = (cita) => {
+    const ok = confirm(`Desea eliminar la cita de ${formatearFecha(cita.fecha, cita.horario)}`)
+
+    if (ok) {
+
+      const citasNoEliminas = citas.filter((c) => {
+        if (c.id !== cita.id) return cita
+      })
+      escribirDB(citasNoEliminas)
+      modificarCitas(leerDB())
+      toast.info("se ha eliminado una cita")
+      return
     }
-  )
+    toast.info("Se cancelo la eliminación")
+  }
+
+  const editarCita = (id) => {
+
+    const [citaFiltrada] = citas.filter(
+      function (cita) {
+        if (cita.id === id) {
+          return cita
+        }
+
+      }
+    )
+
     modificarId(citaFiltrada.id)
     modificarNombreCompleto(citaFiltrada.nombreCompleto)
     modificarFecha(citaFiltrada.fecha)
     modificarHorario(citaFiltrada.horario)
     modificarTelefono(citaFiltrada.telefono)
-  }
 
-  const limpiarEstados = () =>{
-    
   }
-  const modificarCitasyGuardar = () =>{
-    const citaModificadas = citas.map(
-      function(cita){
-      if(cita.id === id){
-        return{
-          id: id,
-          nombreCompleto,
-          horario,
-          telefono,
-          fecha
+  // 
+  const limpiarEstados = () => {
+    modificarId(null)
+    modificarNombreCompleto("")
+    modificarHorario("")
+    modificarFecha("")
+    modificarTelefono("")
+  }
+  // Modifica la cita cargada para editar
+  const modificarCitayGuarda = () => {
+
+    // Mapeamos las el estado de citas
+    // y modificamos unicamente la que 
+    // coincida con el id que tenemos
+    // guardado en el estado id
+    const citasModificadas = citas.map(
+      function (cita) {
+        if (cita.id === id) {
+          return {
+            id: id,
+            nombreCompleto,
+            horario,
+            fecha,
+            telefono
+          }
         }
+        return cita
       }
-      return cita
-    }
-   
-  )
-  escribirDB(citaModificadas)
-  modificarCitas(leerDB())
-
+    )
+    // Escribimos el localStorage
+    escribirDB(citasModificadas)
+    // Leemos el localStorage y modificamos el 
+    // estado de citas
+    modificarCitas(leerDB())
+    // Reseteamos el formulario
+    limpiarEstados()
+    // Mostramos mensajito
+    toast.success("Turno Modificado Enhorabuena")
   }
+  // Funcion para enviar el formulario
   const enviarFormulario = (evento) => {
     evento.preventDefault()
-    if(id!== null){
-      modificarCitasyGuardar()
+    // Verificamos que ese horario no exista
+    const existe = citas.some(
+      function (cita) {
+        return cita.horario === horario && cita.fecha === fecha
+      }
+    )
+    if (existe) {
+      toast.info("Ya hay citas en ese horario")
       return
     }
+
+    if (id !== null) {
+      modificarCitayGuarda()
+      return
+    }
+
     if ([nombreCompleto, fecha, horario, telefono].includes("")) {
       toast.error("Todos los campos son obligatorios")
       return
     }
-    const campos = [nombreCompleto, fecha, horario, telefono]
-    if(campos.every(campo => campos.includes(campo))){
-      toast.success('campos agregados exitosamente')
-    }
+
     // Construir el turno
     const turno = {
-      id:uuid(),
+      id: uuid(),
       nombreCompleto, // nombreCompleto:nombreCompleto
       fecha,
       horario,
       telefono
     }
+
     // Leemos el localStorage
     const datos = leerDB() ?? []
+    // Verificar que no exista esta fecha
+
+
+
     // Agregamos el objeto al final del arreglo
     datos.push(turno)
     // Guardamos en localStorage
     escribirDB(datos)
+    // Actualizamos el estado de citas
     modificarCitas(leerDB() ?? [])
+    // Reseteamos formulario
     limpiarEstados()
-    toast.success('Turno modificado')
-  }
+    // Agregamos TOAST de completado exitoso
 
+    toast.success("Turno Cargado Enhorabuena")
+
+
+  }
   return (
     <div
       className="w-full min-h-screen bg-gradient-to-b from-red-500 to-amber-600 flex justify-center items-center gap-3 px-4 ">
