@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+.prueba {
+  background-color: red;
+}
+
+.prueba:hover {
+  background-color: blue;
+}
+
+.scroll_mio {
+  height: 100%;
+  overflow: hidden;
+}
